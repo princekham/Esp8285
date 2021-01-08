@@ -2,9 +2,14 @@
   Rui Santos
   Complete project details at http://randomnerdtutorials.com  
 *********/
+/* Pin connections
+LED - pin 13 for indicating when there is data upload
+press button - pin 2 (for interrupt for resetting Wifi manager)
+Notes:
+onboard reset pin, enable pin, gpio 0 are not connected.
 
 
-
+*/
 
 
 #include <FS.h> //this needs to be first, or it all crashes and burns...
