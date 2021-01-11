@@ -29,6 +29,10 @@ void callback(char *led_control, byte *payload, unsigned int length)
 
   String msgString = String(message_buff);
   Serial.println(msgString);
+    // At MQTT server publish as - mosquitto_pub -h 192.168.1.7 -t “esp8285/led_control” -m “1”
+  // or  mosquitto_pub -h 192.168.1.7 -t “esp8285/led_control” -m “1”
+  // to get LED on/off
+  
   if (strcmp(led_control, "esp8285/led_control") == 0)
   { 
     if (msgString == "1")
