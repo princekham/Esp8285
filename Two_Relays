@@ -1,0 +1,136 @@
+// mqqt command to publish for LED on/off
+// mosquitto_pub -h 192.168.1.7 -t "esp8285/switch1/control" -m "ON"
+// mosquitto_pub -h 192.168.1.7 -t "esp8285/switch2/control" -m "OFF"
+
+#include <ESP8266WiFi.h>
+#include <PubSubClient.h>
+
+const char* ssid = "Kehsi Haw";
+const char* password = "1Qaz2Wsx";
+const char* mqtt_server = "192.168.1.7";
+
+const int stateMessageEverySec = 5;
+
+#define SWITCH1 13
+const char* switch1ControlTopic = "esp8285/switch1/control";
+const char* switch1StateTopic = "esp8285/switch1/state";
+
+#define SWITCH2 16
+const char* switch2ControlTopic = "esp8285/switch2/control";
+const char* switch2StateTopic = "esp8285/switch2/state";
+
+WiFiClient espClient;
+PubSubClient client(espClient);
+
+void setupWiFi() {
+  delay(10);
+  Serial.println(); Serial.print("Connecting to "); Serial.println(ssid);
+  
+  WiFi.begin(ssid, password);
+
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500); Serial.print(".");
+  }
+  
+  randomSeed(micros());
+
+  Serial.println("");
+  Serial.println("WiFi connected");
+  Serial.println("IP address: ");
+  Serial.println(WiFi.localIP());
+}
+
+void reconnectMQTT() {
+  // Loop until we're reconnected
+  while (!client.connected()) {
+    Serial.print("Attempting MQTT connection...");
+    // Create a random client ID
+    String clientId = "ESP8266Client-";
+    clientId += String(random(0xffff), HEX);
+    // Attempt to connect
+    if (client.connect(clientId.c_str())) {
+      Serial.println("connected");
+      // Once connected, publish an announcement...
+      client.publish("esp8285/testOut", "hello world");
+      // ... and resubscribe
+      client.subscribe(switch1ControlTopic);
+      client.subscribe(switch2ControlTopic);
+    } else {
+      Serial.print("failed, rc=");
+      Serial.print(client.state());
+      Serial.println(" try again in 5 seconds");
+      // Wait 5 seconds before retrying
+      delay(5000);
+    }
+  }
+}
+
+void publishRelayState(const char* relayTopic, int relayCode) {
+  char* message;
+  
+  if (digitalRead(relayCode) == HIGH) {
+    message = "OFF";
+  } else {
+    message = "ON";
+  }
+  
+  client.publish(relayTopic, message);
+}
+
+void processRelayCallback(const char* controlTopic, const char* stateTopic, int relayCode, char* topic, char* command) {
+    if (strcmp(controlTopic, topic) == 0) {
+     if (strcmp(command, "ON") == 0) {
+        Serial.println("ON");
+        digitalWrite(relayCode, HIGH);
+        publishRelayState(stateTopic, relayCode);
+     } else if (strcmp(command, "OFF") == 0) {
+        Serial.println("OFF");
+        digitalWrite(relayCode, LOW);
+        publishRelayState(stateTopic, relayCode);
+     } else {
+         Serial.println("Unknown command");
+     }
+  }
+}
+
+void callback(char* topic, byte* payload, unsigned int length) {
+  Serial.print("Message arrived [");
+  Serial.print(topic);
+  Serial.print("] ");
+  payload[length] = '\0';
+  char *cstring = (char *) payload;
+  Serial.print(cstring);
+  Serial.println();
+
+  processRelayCallback(switch1ControlTopic, switch1StateTopic, SWITCH1, topic, cstring);
+  processRelayCallback(switch2ControlTopic, switch2StateTopic, SWITCH2, topic, cstring);
+}
+
+void setup() {
+  pinMode(SWITCH1, OUTPUT); 
+  pinMode(SWITCH2, OUTPUT);
+   
+  Serial.begin(9600);
+  
+  setupWiFi();
+  client.setServer(mqtt_server, 1883);
+  client.setCallback(callback);
+
+  digitalWrite(SWITCH1, LOW);
+  digitalWrite(SWITCH2, LOW);
+}
+
+unsigned long lastMsg = 0;
+void loop() {
+  if (!client.connected()) {
+    reconnectMQTT();
+  }
+  client.loop();
+
+  unsigned long now = millis();
+  if (now - lastMsg > stateMessageEverySec * 1000) {
+    lastMsg = now;
+    publishRelayState(switch1StateTopic, SWITCH1);
+    publishRelayState(switch2StateTopic, SWITCH2);
+  }
+}
