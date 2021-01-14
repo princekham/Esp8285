@@ -68,7 +68,7 @@ void reconnectMQTT() {
 void publishRelayState(const char* relayTopic, int relayCode) {
   char* message;
   
-  if (digitalRead(relayCode) == HIGH) {
+  if (digitalRead(relayCode) == LOW) {
     message = "OFF";
   } else {
     message = "ON";
