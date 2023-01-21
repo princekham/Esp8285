@@ -9,6 +9,20 @@ RST RXD TXD GND VCC EN
 
 Supply voltage must be 3.3 V
 
+FTDI Pin ESP8285 Pin
 
+------------- -------------------
 
+3.3v VCC
 
+Gnd GND
+
+Rx Tx
+
+Tx Rx
+
+If Flash mode/uploading code: Then ESP8285 IO0 and ESP8285 Gnd have to be connected to each other else don't connect(like post code upload).
+
+My ESP 8285 
+Red LED - GPIO13
+DS18b20 - GPIO4
