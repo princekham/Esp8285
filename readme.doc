@@ -1,4 +1,14 @@
 # Esp8285
 
 Flashing ESP8285
-1. 
+
+GPIO4 -         -GPIO16
+GPIO0-          -GPIO14
+GPIO2-          -GPIO13
+RST RXD TXD GND VCC EN
+
+Supply voltage must be 3.3 V
+
+
+
+
