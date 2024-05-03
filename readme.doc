@@ -37,5 +37,8 @@ Red LED - GPIO13
 DS18b20 - GPIO4
 
 ## Connection with my humidity sensor
+Pin out of DHT11
+(VCC)(Data)(Not used)(GND)
+data pin is connected to GPIO14
 
 
